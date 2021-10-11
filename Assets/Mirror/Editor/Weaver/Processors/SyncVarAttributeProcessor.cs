@@ -317,7 +317,7 @@ namespace Mirror.Weaver
 
             //NOTE: is property even needed? Could just use a setter function?
             //create the property
-            PropertyDefinition propertyDefinition = new PropertyDefinition($"{originalName}_property", PropertyAttributes.None, fd.FieldType)
+            PropertyDefinition propertyDefinition = new PropertyDefinition($"{originalName}{NewSyncVarTSuffix}_property", PropertyAttributes.None, fd.FieldType)
             {
                 GetMethod = get,
                 SetMethod = set
