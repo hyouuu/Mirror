@@ -15,8 +15,11 @@ namespace Mirror.Weaver
         SyncVarAccessLists syncVarAccessLists;
         Logger Log;
 
-        public const string OriginalSyncVarSuffix = "_disabled";
-        public const string NewSyncVarTSuffix = "";
+        // keep original name for now. less confusing in IL.
+        public const string OriginalSyncVarSuffix = "";
+
+        // add suffix to SyncVar<T>. SyncVarDrawer will exclude it.
+        public const string NewSyncVarTSuffix = "_generated";
 
         static string HookParameterMessage(string hookName, TypeReference ValueType) =>
             $"void {hookName}({ValueType} oldValue, {ValueType} newValue)";
