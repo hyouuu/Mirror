@@ -16,6 +16,7 @@ namespace Mirror.Weaver
         Logger Log;
 
         public const string OriginalSyncVarSuffix = "_disabled";
+        public const string NewSyncVarTSuffix = "";
 
         static string HookParameterMessage(string hookName, TypeReference ValueType) =>
             $"void {hookName}({ValueType} oldValue, {ValueType} newValue)";
@@ -166,12 +167,12 @@ namespace Mirror.Weaver
             if (originalField.FieldType.Is<UnityEngine.GameObject>())
             {
                 typeReference = weaverTypes.SyncVarT_GameObject_Type;
-                fieldDefinition = new FieldDefinition(originalField.Name, fieldAttributes, typeReference);
+                fieldDefinition = new FieldDefinition(originalField.Name + NewSyncVarTSuffix, fieldAttributes, typeReference);
             }
             else if (originalField.FieldType.Is<NetworkIdentity>())
             {
                 typeReference = weaverTypes.SyncVarT_NetworkIdentity_Type;
-                fieldDefinition = new FieldDefinition(originalField.Name, fieldAttributes, typeReference);
+                fieldDefinition = new FieldDefinition(originalField.Name + NewSyncVarTSuffix, fieldAttributes, typeReference);
             }
             // SyncVarNetworkBehaviour<T> with explicit type for
             // OnHook(Monster, Monster) instead of OnHook(NetworkBehaviour, NetworkBehaviour)
@@ -179,14 +180,14 @@ namespace Mirror.Weaver
                      originalField.FieldType.IsDerivedFrom<NetworkBehaviour>())
             {
                 typeReference = weaverTypes.SyncVarT_NetworkBehaviour_Type.MakeGenericInstanceType(originalField.FieldType);
-                fieldDefinition = new FieldDefinition(originalField.Name, fieldAttributes, typeReference);
+                fieldDefinition = new FieldDefinition(originalField.Name + NewSyncVarTSuffix, fieldAttributes, typeReference);
             }
             // SyncVar<T>
             else
             {
                 // make a generic instance for SyncVar<originalField Type>
                 typeReference = weaverTypes.SyncVarT_Type.MakeGenericInstanceType(originalField.FieldType);
-                fieldDefinition = new FieldDefinition(originalField.Name, fieldAttributes, typeReference);
+                fieldDefinition = new FieldDefinition(originalField.Name + NewSyncVarTSuffix, fieldAttributes, typeReference);
             }
         }
 
