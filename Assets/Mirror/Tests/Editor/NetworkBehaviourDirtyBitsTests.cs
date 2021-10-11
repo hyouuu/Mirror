@@ -16,11 +16,6 @@ namespace Mirror.Tests
         public readonly SyncDictionary<int, string> dict = new SyncDictionary<int, string>();
     }
 
-    public class NetworkBehaviourSyncVarDirtyBitsExposed : NetworkBehaviour
-    {
-        public ulong syncVarDirtyBitsExposed => syncVarDirtyBits;
-    }
-
     public class NetworkBehaviourDirtyBitsTests : MirrorEditModeTest
     {
         [SetUp]
@@ -32,21 +27,6 @@ namespace Mirror.Tests
             // need a connection.
             NetworkServer.Listen(1);
             ConnectHostClientBlockingAuthenticatedAndReady();
-        }
-
-        [Test]
-        public void SetSyncVarDirtyBit()
-        {
-            CreateNetworkedAndSpawn(out GameObject _, out NetworkIdentity _, out NetworkBehaviourSyncVarDirtyBitsExposed comp);
-
-            // set 3rd dirty bit.
-            comp.SetSyncVarDirtyBit(0b_00000000_00000100);
-            Assert.That(comp.syncVarDirtyBitsExposed, Is.EqualTo(0b_00000000_00000100));
-
-            // set 5th dirty bit.
-            // both 3rd and 5th should be set.
-            comp.SetSyncVarDirtyBit(0b_00000000_00010000);
-            Assert.That(comp.syncVarDirtyBitsExposed, Is.EqualTo(0b_00000000_00010100));
         }
 
         // changing a SyncObject (collection) should modify the dirty mask.
@@ -91,7 +71,7 @@ namespace Mirror.Tests
         }
 
         [Test]
-        public void ClearAllDirtyBitsClearsSyncVarDirtyBits()
+        public void ClearAllDirtyBitsClearsUserDirtyBit()
         {
             CreateNetworkedAndSpawn(out GameObject _, out NetworkIdentity _, out EmptyBehaviour emptyBehaviour);
 
@@ -99,8 +79,8 @@ namespace Mirror.Tests
             emptyBehaviour.syncInterval = 0;
             Assert.That(emptyBehaviour.IsDirty(), Is.False);
 
-            // set one syncvar dirty bit
-            emptyBehaviour.SetSyncVarDirtyBit(1);
+            // set user dirty
+            emptyBehaviour.SetDirty(true);
             Assert.That(emptyBehaviour.IsDirty(), Is.True);
 
             // clear it

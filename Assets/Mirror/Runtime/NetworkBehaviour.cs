@@ -83,24 +83,25 @@ namespace Mirror
         //   -> spares us from running delta algorithms
         //   -> still supports dynamically sized types
         //
-        // 64 bit mask, tracking up to 64 SyncVars.
-        // TODO syncVarDirtyBits aren't used anymore. only to trigger user onserialize?
-        protected ulong syncVarDirtyBits { get; private set; }
         // 64 bit mask, tracking up to 64 sync collections (internal for tests).
         // internal for tests, field for faster access (instead of property)
         internal ulong syncObjectDirtyBits;
+        // dirty bool from SetDirty() to trigger custom OnSerialize etc.
+        bool userDirty;
 
-        /// <summary>Set as dirty so that it's synced to clients again.</summary>
-        // these are masks, not bit numbers, ie. 110011b not '2' for 2nd bit.
-        // TODO syncVarDirtyBits aren't used anymore. only to trigger user onserialize?
-        public void SetSyncVarDirtyBit(ulong dirtyBit)
-        {
-            syncVarDirtyBits |= dirtyBit;
-        }
+        // Deprecated 2021-10-11
+        [Obsolete("SetSyncVarDirtyBit used to set [SyncVar] dirty bits, which isn't necessary anymore.")]
+        public void SetSyncVarDirtyBit(ulong dirtyBit) {}
 
         // Deprecated 2021-09-19
-        [Obsolete("SetDirtyBit was renamed to SetSyncVarDirtyBit because that's what it does")]
+        [Obsolete("SetDirtyBit used to set [SyncVar] dirty bits, which isn't necessary anymore. If you have custom OnSerialize code, you can use SetDirty() to tell Mirror to sync again, or use syncInterval.")]
         public void SetDirtyBit(ulong dirtyBit) => SetSyncVarDirtyBit(dirtyBit);
+
+        /// <summary>Sets dirty. OnSerialize will be called next time. Useful to let Mirror know that user OnSerialize code should be synced.</summary>
+        // we don't have [SyncVar] dirty masks anymore.
+        // but users still need a way to tell Mirror to call OnSerialize in case
+        // they have custom OnSerialize code etc.
+        public void SetDirty(bool dirty) => userDirty = dirty;
 
         // true if syncInterval elapsed and any SyncVar or SyncObject is dirty
         public bool IsDirty()
@@ -108,7 +109,7 @@ namespace Mirror
             if (NetworkTime.localTime - lastSyncTime >= syncInterval)
             {
                 // OR both bitmasks. != 0 if either was dirty.
-                return (syncVarDirtyBits | syncObjectDirtyBits) != 0UL;
+                return userDirty || syncObjectDirtyBits != 0UL;
             }
             return false;
         }
@@ -119,7 +120,7 @@ namespace Mirror
         public void ClearAllDirtyBits()
         {
             lastSyncTime = NetworkTime.localTime;
-            syncVarDirtyBits = 0L;
+            userDirty = false;
             syncObjectDirtyBits = 0L;
 
             // clear all unsynchronized changes in syncobjects
